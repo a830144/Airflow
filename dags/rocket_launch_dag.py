@@ -3,13 +3,20 @@ import pathlib
 import airflow
 import requests
 import requests.exceptions as requests_exceptions
+import datetime as dt
 from airflow import DAG
 from airflow.operators.bash import BashOperator
 from airflow.operators.python import PythonOperator
 
-dag = DAG(dag_id="download_rocket_launches",start_date=airflow.utils.dates.days_ago(14),schedule_interval="@daily",)
+dag = DAG(
+	dag_id="download_rocket_launches",
+	start_date=dt.datetime(2022, 1, 25),
+	end_date=dt.datetime(year=2022, month=2, day=5),
+	schedule_interval=dt.timedelta(days=3),
+	catchup=False,
+)
 
-download_launches = BashOperator(task_id="download_launches",bash_command="curl -o /tmp/launches.json -L 'https://ll.thespacedevs.com/2.0.0/launch/upcoming'",dag=dag,)
+download_launches = BashOperator(task_id="download_launches",bash_command="curl -o /tmp/launches{{ds}}.json -L 'https://ll.thespacedevs.com/2.0.0/launch/upcoming'",dag=dag,)
 
 def _get_pictures():
 	# Ensure directory exists
@@ -33,6 +40,8 @@ def _get_pictures():
 
 get_pictures = PythonOperator(task_id="get_pictures",python_callable=_get_pictures,dag=dag,)
 
-notify = BashOperator(task_id="notify",bash_command='echo "There are now $(ls /tmp/images/ | wc -l) images."',dag=dag,)
+notify = BashOperator(task_id="notify",bash_command="echo Today is {{ execution_date.format('dddd') }}",dag=dag,)
 
-download_launches >> get_pictures >> notify
+notify_1 = BashOperator(task_id="notify_1",bash_command="echo Today DS variable is {{ ds }}",dag=dag,)
+
+download_launches >> get_pictures >> notify >> notify_1
