@@ -10,6 +10,7 @@ from airflow.operators.bash import BashOperator
 from airflow.operators.dummy import DummyOperator
 from airflow.operators.latest_only import LatestOnlyOperator
 from airflow.operators.python import PythonOperator
+from custom_operator.hello_operator import HelloDBOperator
 
 dag = DAG(
 	dag_id="umbrella",
@@ -46,6 +47,8 @@ latest_only = LatestOnlyOperator(
 	dag=dag,
 )
 
+hello_task = HelloDBOperator(task_id="sample-task", name="foo_bar" , mysql_conn="mysql_conn" , database="drone1")
+
 start >> [fetch_weather_data, fetch_sales_data]
 
 fetch_weather_data >> clean_weather_data
@@ -53,4 +56,4 @@ fetch_sales_data >> clean_sales_data
 
 [clean_weather_data, clean_sales_data] >> join_data_sets
 
-join_data_sets >> train_model >> latest_only >> deploy_model
+join_data_sets >> train_model >> latest_only >> hello_task >> deploy_model
