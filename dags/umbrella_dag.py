@@ -15,7 +15,7 @@ from custom_operator.hello_operator import HelloDBOperator
 dag = DAG(
 	dag_id="umbrella",
 	start_date=dt.datetime(2022, 2, 3),
-	end_date=dt.datetime(year=2022, month=2, day=10),
+	end_date=dt.datetime(year=2022, month=3, day=15),
 	schedule_interval=dt.timedelta(days=3),
 	catchup=False,
 )
